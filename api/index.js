@@ -1,5 +1,7 @@
 const express=require('express');
 require('dotenv').config()
+const cors=require('cors');
+
 const port=5000;
 const postRoutes=require('./routes/posts.js')
 const userRoutes=require('./routes/users.js')
@@ -7,7 +9,7 @@ const authRoutes=require('./routes/auth.js')
 const app= express();
 
 app.use(express.json());
-
+app.use(cors());
 
 app.use("/api/posts", postRoutes);
 app.use("/api/users", userRoutes);
