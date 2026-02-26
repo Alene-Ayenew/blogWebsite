@@ -33,7 +33,7 @@ function Register() {
         <input type="password" name="password" placeholder='password' id="" required  onChange={handleChange} />
         <button onClick={handleSubmit}>Register</button>
         {err && <p >{err} </p>}
-        <span>Don't have account ? <Link to="/login">Login</Link> </span>
+        <span>already have an account ? <Link to="/login">Login</Link> </span>
       </form>
     </div>
   )

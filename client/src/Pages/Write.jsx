@@ -59,7 +59,7 @@ function Write() {
         {/* Toolbar */}
         {editor && (
           <div className="toolbar">
-            <button onClick={() => editor.chain().focus().toggleBold().run()}>
+            <button className="buttons" onClick={() => editor.chain().focus().toggleBold().run()}>
               Bold
             </button>
 
@@ -68,6 +68,7 @@ function Write() {
             </button>
 
             <button
+            className="buttons"
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 2 }).run()
               }
