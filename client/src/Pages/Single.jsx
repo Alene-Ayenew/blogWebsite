@@ -1,46 +1,72 @@
-import React from 'react'
+import React,{useState,  useEffect,  useContext} from 'react'
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Edit from '../img/edit.png'
 import Delete from '../img/delete.png'
-import { Link } from 'react-router'
 import Menu from '../Components/Menu'
+import axios from 'axios'
+import moment from 'moment'
+import { AuthContext } from '../context/authContext';
+import DOMPurify from "dompurify";
 function Single() {
+  const [post,setPost]=useState({});
+  const location=useLocation()
+  const postId=location.pathname.split("/")[2]
+  const {currentUser}=useContext(AuthContext);
+  const navigate=useNavigate();
+useEffect(()=>{
+  const fetchData=async ()=>{
+    try {
+    const res=await axios.get(`http://localhost:5000/api/posts/${postId}`);
+    setPost(res.data);
+  } catch (error) {
+    console.log(error);
+  }
+  };
+  fetchData();
+},[postId]);
+const handleDelete=async ()=>{
+  try {
+    await axios.delete(`http://localhost:5000/api/posts/${postId}`);
+    navigate("/");
+  } catch (error) {
+    console.log(error);
+  }
+}
+ const getText = (html) =>{
+    const doc = new DOMParser().parseFromString(html, "text/html")
+    return doc.body.textContent
+  }
   return (
     <div className="single">
       <div className="content">
-        <img src="https://images.pexels.com/photos/7008010/pexels-photo-7008010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" />
+        <img src={`/upload/${post.img}`} alt="" />
         <div className="user">
-          <img src="https://images.pexels.com/photos/7008010/pexels-photo-7008010.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="" />
+          {
+            post.userImage && <img src={post.userImage} alt="" />}
           <div className="user-info">
-            <span>John </span>
-            <span>posted 2 days ago</span>
+            <span>{post.username} </span>
+            <span>  posted  {moment(post.date).fromNow()} </span>
           </div>
-          <div className="edit">
-            <Link to={`/write?edit=2`}>
+          {currentUser.username===post.username && (<div className="edit">
+            <Link to={`/write?edit=2`} state={post}>
              <img src={Edit} alt="" />
              </Link>
            
-            <img src={Delete} alt="" />
-          </div>
+            <img onClick={handleDelete} src={Delete} alt="" />
+          </div>)}
         </div>
         <h1>
-          Lorem ipsum dolor sit, amet consectetur adipisicing elit.
+          {post.title}
         </h1>
-       <p>
-         <p>
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Officia libero praesentium qui beatae distinctio nam magnam ea asperiores modi nesciunt illum eum iusto dolores quae nihil incidunt quisquam, molestiae dolorum.
-          Libero hic ipsum id doloremque, provident magnam quos, inventore et quia itaque eveniet ipsa fugit dignissimos dolorum sunt tempora ab eos. Cupiditate blanditiis tempora praesentium obcaecati rem. Repudiandae, nulla! Rerum?
-          Hic dolorem ab rerum excepturi ipsa cum voluptates modi accusamus sequi porro nesciunt minus omnis saepe rem aliquid, illo, dolorum aperiam tempore. Sapiente expedita ab accusamus porro ullam tenetur temporibus.
-          
-           <br />
-          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Explicabo, pariatur, excepturi alias porro aperiam inventore ipsum possimus, debitis autem animi quia? Quo natus neque nemo nesciunt libero quisquam hic illo!
-          Quae ea necessitatibus laboriosam repellendus temporibus, culpa cupiditate, non dolorum modi similique recusandae blanditiis asperiores provident nemo soluta reprehenderit obcaecati. Saepe quaerat nam laborum quis perspiciatis illo deserunt dignissimos nostrum! <br />
-          
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Corporis officiis blanditiis saepe aliquam maxime consequatur est minima debitis deleniti eum itaque, nostrum modi exercitationem amet neque consequuntur alias accusantium ipsa!
-        </p>
-       </p>
+        <p
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify.sanitize(post.description),
+          }}
+        ></p> 
+       
       </div>
       <div className="menu">
-        <Menu/>
+        <Menu cat={post.cat} />
       </div>
     </div>
   )

@@ -25,29 +25,40 @@ const register=(req,res)=>{
     })
     })
 }
-const login=(req,res)=>{
-    // check user
- const query="SELECT * FROM users WHERE username = ?";
- db.query(query, [req.body.username],(err,data)=>{
-    if(err) return res,json(err);
-    if(data.length===0) return res.status(404).json("user not found!");
-    // check the password 
-    const isPasswordCorrect=bcrypt.compareSync(req.body.password,data[0].password);
-    if(!isPasswordCorrect) return res.status(400).json("Wrong username or password!");
+const login = (req, res) => {
+  const query = "SELECT * FROM users WHERE username = ?";
+  
+  db.query(query, [req.body.username], (err, data) => {
+    if (err) return res.status(500).json(err);
+    if (data.length === 0)
+      return res.status(404).json("User not found!");
 
-    const token=jwt.sign({id:data[0].id},"jwtKey");
+    const isPasswordCorrect = bcrypt.compareSync(
+      req.body.password,
+      data[0].password
+    );
+
+    if (!isPasswordCorrect)
+      return res.status(400).json("Wrong username or password!");
+
+    const token = jwt.sign({ id: data[0].id }, "jwtkey");
+
     const { password, ...other } = data[0];
 
-   res.cookie("access_token", token, {
+    res
+      .cookie("access_token", token, {
+        httpOnly: true,
+        sameSite: "lax",
+      })
+      .status(200)
+      .json(other);
+  });
+};
+const logout = (req, res) => {
+  res.clearCookie("access_token", {
     httpOnly: true,
-  })
-  .status(200)
-  .json(other);
- }) 
-
-
-}
-const logout=(req,res)=>{
-    res.json("logout")
-}
+    sameSite: "lax",
+    secure: false
+  }).status(200).json("user has been logged out");
+};
 module.exports={register,login,logout}

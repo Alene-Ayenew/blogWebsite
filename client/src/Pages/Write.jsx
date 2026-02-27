@@ -1,37 +1,19 @@
-// import React,{useState} from 'react'
-// import ReactQuill from 'react-quill'
-// import 'react-quill/dist/quill.snow.css';
-// function Write() {
-//   const [value, setValue]=useState('');
-//   return (
-//     <div className="add">
-//       <div className="content">
-//         <input type="text" name="" id="" placeholder='Title'/>
-//         <div className="editorContainer">
-//           <ReactQuill them="snow" value={value} onChange={setValue}/>
-//         </div>
-//       </div>
-//       <div className="menu">
-//         <div className="item">i1</div>
-//         <div className="item"> i2</div>
-//       </div>
-//     </div>
-//   )
-// }
-
-// export default Write
-
-
 import { useState } from "react"
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
+import axios from 'axios'
+import { useLocation, useNavigate } from "react-router"
+import moment from "moment"
 
 function Write() {
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
-
+  const state=useLocation().state
+ const [title, setTitle] = useState(state?.title || "")
+ const [content, setContent] = useState(state?.desc || "")
+  const [file,setFile]=useState(null)
+  const [cat, setCat]=useState(state?.cat || "")
+const navigate=useNavigate();
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -40,11 +22,53 @@ function Write() {
         placeholder: "Write your blog post...",
       }),
     ],
-     content: content || null,
+     content,
     onUpdate({ editor }) {
       setContent(editor.getHTML())
     },
   })
+  const upload=async ()=>{
+    try {
+      const formData=new FormData();
+      formData.append("file",file)
+      const res=await axios.post("http://localhost:5000/api/upload",formData)
+     return res.data
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleClick=async (e)=>{
+    e.preventDefault();
+    const imgUrl= await upload();
+
+    try {
+      state? await axios.put(
+  `http://localhost:5000/api/posts/${state.id}`,
+  {
+    title,
+    description: content, //value
+    cat,
+    img: file ? imgUrl : ""
+  },
+  { withCredentials: true }
+):  await axios.post(
+  "http://localhost:5000/api/posts/",
+  {
+    title,
+    description: content,//value
+    cat,
+    img: file ? imgUrl : "",
+    date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss")
+  },
+  { withCredentials: true }
+  
+);
+navigate("/")
+    } catch (err) {
+      console.log(err)
+    }
+  }
 
   return (
     <div className="add">
@@ -102,28 +126,70 @@ function Write() {
           <span>
            <b> Visibility: </b> Public
           </span>
-          <input style={{display:"none"}} type="file" name="" id="file" />
+          <input style={{display:"none"}} type="file" name="" id="file" onChange={(e) => setFile(e.target.files[0])}  />
           <label className="file" htmlFor="file">Upload Images</label>
           <div className="buttons">
             <button>Save as a draft</button>
-            <button>Update</button>
+            <button onClick={handleClick}>Publish</button>
           </div>
         </div>
-        <div className="item">
-          <h1>Category</h1>
-          <input type="radio" name="cat" value='art' id="art" />
-          <label htmlFor="art">ART</label>
-          <input type="radio" name="cat" value='science' id="science" />
-          <label htmlFor="science">SCIENCE</label>
-          <input type="radio" name="cat" value='technology' id="technology" />
-          <label htmlFor="technology">TECHNOLOGY</label>
-          <input type="radio" name="cat" value='cinema' id="cinema" />
-          <label htmlFor="cinema">CINEMA</label>
-          <input type="radio" name="cat" value='design' id="design" />
-          <label htmlFor="design">DESIGN</label>
-          <input type="radio" name="cat" value='food' id="food" />
-          <label htmlFor="food">FOOD</label>
-        </div>
+       <div className="item">
+  <h1>Category</h1>
+
+  <input
+    type="radio"
+    name="cat"
+    value="art"
+    checked={cat === "art"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="art">ART</label>
+
+  <input
+    type="radio"
+    name="cat"
+    value="science"
+    checked={cat === "science"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="science">SCIENCE</label>
+
+  <input
+    type="radio"
+    name="cat"
+    value="technology"
+    checked={cat === "technology"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="technology">TECHNOLOGY</label>
+
+  <input
+    type="radio"
+    name="cat"
+    value="cinema"
+    checked={cat === "cinema"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="cinema">CINEMA</label>
+
+  <input
+    type="radio"
+    name="cat"
+    value="design"
+    checked={cat === "design"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="design">DESIGN</label>
+
+  <input
+    type="radio"
+    name="cat"
+    value="food"
+    checked={cat === "food"}
+    onChange={(e) => setCat(e.target.value)}
+  />
+  <label htmlFor="food">FOOD</label>
+</div>
       </div>
     </div>
   )
